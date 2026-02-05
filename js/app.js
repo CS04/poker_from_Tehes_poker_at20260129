@@ -1007,10 +1007,10 @@ function startBettingRound() {
 			} else {
 				actionButton.textContent = "Raise";
 			}
+			sliderTouchedWithoutMove = false;
 		}
 		// Snap slider to min-raise on change if needed
 		function onSliderChange() {
-			sliderTouchedWithoutMove = false;
 			const val = parseInt(amountSlider.value, 10);
 			const minRaise = needToCall + lastRaise;
 			// If value is between Call and Min‑Raise, snap to minRaise
@@ -1020,9 +1020,21 @@ function startBettingRound() {
 				sliderOutput.classList.remove("invalid");
 				onSliderInput(); // refresh button label & invalid state
 			}
+			sliderTouchedWithoutMove = false;
 		}
 		function onSliderTouchdown() {
 			sliderTouchedWithoutMove = true;
+			if (sliderTouchedWithoutMove === true) {
+				const val = parseInt(amountSlider.value, 10) + smallBlind;
+				const minRaise = needToCall + lastRaise;
+				// If value is between Call and Min‑Raise, snap to minRaise
+				if (val > needToCall && val < minRaise) {
+					amountSlider.value = minRaise;
+					sliderOutput.value = minRaise;
+					sliderOutput.classList.remove("invalid");
+					onSliderInput(); // refresh button label & invalid state
+				}
+			}
 		}
 		function onSliderTouchup() {
 			if (sliderTouchedWithoutMove === true) {
