@@ -23,9 +23,9 @@ let pot = 0;
 let initialDealerName = null;
 let dealerOrbitCount = -1;
 let gameStarted = false;
+let gameFinished = false;
 let openCardsMode = false;
 let spectatorMode = false;
-let sliderTouchedWithoutMove = false;
 
 const MAX_ITEMS = 8;
 const notifArr = [];
@@ -497,6 +497,7 @@ function createPlayers() {
 				barrelIntent: null,
 				cbetMade: false,
 				barrelMade: false,
+				nonValueAggressionMade: false,
 			},
 			showTotal: function () {
 				player.querySelector(".chips .total").textContent = playerObject.chips;
@@ -673,6 +674,7 @@ function preFlop() {
 			barrelIntent: null,
 			cbetMade: false,
 			barrelMade: false,
+			nonValueAggressionMade: false,
 		};
 	});
 
@@ -691,11 +693,13 @@ function preFlop() {
 		champion.showTotal();
 		champion.seat.classList.add("winner");
 		logFlow("tournament_end", { champion: champion.name });
-		if (typeof umami !== "undefined") {
+		gameFinished = true;
+		if (typeof umami !== "undefined" && !SPEED_MODE) {
 			umami.track("Poker", {
 				champion: champion.name,
 				botWon: champion.isBot,
 				handsPlayed: getHandsPlayedBucket(totalHands),
+				finished: true,
 			});
 		}
 		return; // skip the rest of preFlop()
@@ -710,7 +714,7 @@ function preFlop() {
 
 	// Shuffle and deal new hole cards
 	dealCards();
-	if (totalHands === 1 && typeof umami !== "undefined") {
+	if (totalHands === 1 && typeof umami !== "undefined" && !SPEED_MODE) {
 		umami.track("Poker", {
 			players: players.length,
 			bots: players.filter((p) => p.isBot).length,
@@ -1007,7 +1011,6 @@ function startBettingRound() {
 			} else {
 				actionButton.textContent = "Raise";
 			}
-			sliderTouchedWithoutMove = false;
 		}
 		// Snap slider to min-raise on change if needed
 		function onSliderChange() {
@@ -1020,26 +1023,9 @@ function startBettingRound() {
 				sliderOutput.classList.remove("invalid");
 				onSliderInput(); // refresh button label & invalid state
 			}
-			sliderTouchedWithoutMove = false;
-		}
-		function onSliderTouchdown() {
-			sliderTouchedWithoutMove = true;
-		}
-		function onSliderTouchup() {
-			if (sliderTouchedWithoutMove === true) {
-				const val = parseInt(amountSlider.value, 10) + 1;
-				amountSlider.value = val;
-				sliderOutput.value = val;
-				onSliderChange(); // refresh button label & invalid state
-			}
-			sliderTouchedWithoutMove = false;
 		}
 		amountSlider.addEventListener("input", onSliderInput);
 		amountSlider.addEventListener("change", onSliderChange);
-		amountSlider.addEventListener("mousedown", onSliderTouchdown);
-		amountSlider.addEventListener("touchstart", onSliderTouchdown);
-		amountSlider.addEventListener("mouseup", onSliderTouchup);
-		amountSlider.addEventListener("touchend", onSliderTouchup);
 		onSliderInput();
 
 		// Event handlers
@@ -1052,10 +1038,6 @@ function startBettingRound() {
 			player.seat.classList.remove("active");
 			amountSlider.removeEventListener("input", onSliderInput);
 			amountSlider.removeEventListener("change", onSliderChange);
-			amountSlider.removeEventListener("mousedown", onSliderTouchdown);
-			amountSlider.removeEventListener("touchstart", onSliderTouchdown);
-			amountSlider.removeEventListener("mouseup", onSliderTouchup);
-			amountSlider.removeEventListener("touchend", onSliderTouchup);
 
 			// Handle action types
 			if (bet === 0) {
@@ -1132,10 +1114,6 @@ function startBettingRound() {
 			player.seat.classList.remove("active");
 			amountSlider.removeEventListener("input", onSliderInput);
 			amountSlider.removeEventListener("change", onSliderChange);
-			amountSlider.removeEventListener("mousedown", onSliderTouchdown);
-			amountSlider.removeEventListener("touchstart", onSliderTouchdown);
-			amountSlider.removeEventListener("mouseup", onSliderTouchup);
-			amountSlider.removeEventListener("touchend", onSliderTouchup);
 			foldButton.removeEventListener("click", onFold);
 			actionButton.removeEventListener("click", onAction);
 			// Decide whether to continue the betting loop or advance the phase
@@ -1613,6 +1591,12 @@ function init() {
 
 	document.addEventListener("touchstart", function () {}, false);
 	startButton.addEventListener("click", startGame, false);
+	globalThis.addEventListener("pagehide", () => {
+		if (SPEED_MODE || typeof umami === "undefined" || !gameStarted || gameFinished) {
+			return;
+		}
+		umami.track("Poker", { finished: false });
+	}, false);
 
 	for (const rotateIcon of rotateIcons) {
 		rotateIcon.addEventListener("click", rotateSeat, false);
@@ -1639,7 +1623,7 @@ poker.init();
  * - AUTO_RELOAD_ON_SW_UPDATE: reload page once after an update
  -------------------------------------------------------------------------------------------------- */
 const USE_SERVICE_WORKER = true;
-const SERVICE_WORKER_VERSION = "2026-01-29-v2";
+const SERVICE_WORKER_VERSION = "2026-02-04-v1";
 const AUTO_RELOAD_ON_SW_UPDATE = true;
 
 /* --------------------------------------------------------------------------------------------------
