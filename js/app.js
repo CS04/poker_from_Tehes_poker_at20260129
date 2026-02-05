@@ -25,6 +25,7 @@ let dealerOrbitCount = -1;
 let gameStarted = false;
 let openCardsMode = false;
 let spectatorMode = false;
+let sliderTouchedWithoutMove = false;
 
 const MAX_ITEMS = 8;
 const notifArr = [];
@@ -988,6 +989,7 @@ function startBettingRound() {
 
 		// Update button label on slider input
 		function onSliderInput() {
+			sliderTouchedWithoutMove = false;
 			const val = parseInt(amountSlider.value, 10);
 			const minRaise = needToCall + lastRaise;
 			// Only flag *raises* that fall below the minimum‑raise threshold
@@ -1009,6 +1011,7 @@ function startBettingRound() {
 		}
 		// Snap slider to min-raise on change if needed
 		function onSliderChange() {
+			sliderTouchedWithoutMove = false;
 			const val = parseInt(amountSlider.value, 10);
 			const minRaise = needToCall + lastRaise;
 			// If value is between Call and Min‑Raise, snap to minRaise
@@ -1019,8 +1022,29 @@ function startBettingRound() {
 				onSliderInput(); // refresh button label & invalid state
 			}
 		}
+		function onSliderTouchdown() {
+			sliderTouchedWithoutMove = true;
+		}
+		function onSliderTouchup() {
+			if (sliderTouchedWithoutMove === true) {
+				const val = parseInt(amountSlider.value, 10) + smallBlind;
+				const minRaise = needToCall + lastRaise;
+				// If value is between Call and Min‑Raise, snap to minRaise
+				if (val > needToCall && val < minRaise) {
+					amountSlider.value = minRaise;
+					sliderOutput.value = minRaise;
+					sliderOutput.classList.remove("invalid");
+					onSliderInput(); // refresh button label & invalid state
+				}
+			}
+			sliderTouchedWithoutMove = false;
+		}
 		amountSlider.addEventListener("input", onSliderInput);
 		amountSlider.addEventListener("change", onSliderChange);
+		amountSlider.addEventListener("mousedown", onSliderTouchdown);
+		amountSlider.addEventListener("touchstart", onSliderTouchdown);
+		amountSlider.addEventListener("mouseup", onSliderTouchup);
+		amountSlider.addEventListener("touchend", onSliderTouchup);
 		onSliderInput();
 
 		// Event handlers
@@ -1033,6 +1057,10 @@ function startBettingRound() {
 			player.seat.classList.remove("active");
 			amountSlider.removeEventListener("input", onSliderInput);
 			amountSlider.removeEventListener("change", onSliderChange);
+			amountSlider.removeEventListener("mousedown", onSliderTouchdown);
+			amountSlider.removeEventListener("touchstart", onSliderTouchdown);
+			amountSlider.removeEventListener("mouseup", onSliderTouchup);
+			amountSlider.removeEventListener("touchend", onSliderTouchup);
 
 			// Handle action types
 			if (bet === 0) {
@@ -1109,6 +1137,10 @@ function startBettingRound() {
 			player.seat.classList.remove("active");
 			amountSlider.removeEventListener("input", onSliderInput);
 			amountSlider.removeEventListener("change", onSliderChange);
+			amountSlider.removeEventListener("mousedown", onSliderTouchdown);
+			amountSlider.removeEventListener("touchstart", onSliderTouchdown);
+			amountSlider.removeEventListener("mouseup", onSliderTouchup);
+			amountSlider.removeEventListener("touchend", onSliderTouchup);
 			foldButton.removeEventListener("click", onFold);
 			actionButton.removeEventListener("click", onAction);
 			// Decide whether to continue the betting loop or advance the phase
