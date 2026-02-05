@@ -989,7 +989,6 @@ function startBettingRound() {
 
 		// Update button label on slider input
 		function onSliderInput() {
-			sliderTouchedWithoutMove = false;
 			const val = parseInt(amountSlider.value, 10);
 			const minRaise = needToCall + lastRaise;
 			// Only flag *raises* that fall below the minimum‑raise threshold
