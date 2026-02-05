@@ -1024,29 +1024,14 @@ function startBettingRound() {
 		}
 		function onSliderTouchdown() {
 			sliderTouchedWithoutMove = true;
-			if (sliderTouchedWithoutMove === true) {
-				const val = parseInt(amountSlider.value, 10) + smallBlind;
-				const minRaise = needToCall + lastRaise;
-				// If value is between Call and Min‑Raise, snap to minRaise
-				if (val > needToCall && val < minRaise) {
-					amountSlider.value = minRaise;
-					sliderOutput.value = minRaise;
-					sliderOutput.classList.remove("invalid");
-					onSliderInput(); // refresh button label & invalid state
-				}
-			}
 		}
 		function onSliderTouchup() {
 			if (sliderTouchedWithoutMove === true) {
 				const val = parseInt(amountSlider.value, 10) + smallBlind;
-				const minRaise = needToCall + lastRaise;
-				// If value is between Call and Min‑Raise, snap to minRaise
-				if (val > needToCall && val < minRaise) {
-					amountSlider.value = minRaise;
-					sliderOutput.value = minRaise;
-					sliderOutput.classList.remove("invalid");
-					onSliderInput(); // refresh button label & invalid state
-				}
+				amountSlider.value = val;
+				sliderOutput.value = val;
+				sliderOutput.classList.remove("invalid");
+				onSliderChange(); // refresh button label & invalid state
 			}
 			sliderTouchedWithoutMove = false;
 		}
