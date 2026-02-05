@@ -1027,10 +1027,9 @@ function startBettingRound() {
 		}
 		function onSliderTouchup() {
 			if (sliderTouchedWithoutMove === true) {
-				const val = parseInt(amountSlider.value, 10) + smallBlind;
+				const val = parseInt(amountSlider.value, 10) + 1;
 				amountSlider.value = val;
 				sliderOutput.value = val;
-				sliderOutput.classList.remove("invalid");
 				onSliderChange(); // refresh button label & invalid state
 			}
 			sliderTouchedWithoutMove = false;
